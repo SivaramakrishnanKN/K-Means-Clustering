@@ -1,4 +1,12 @@
 import numpy as np
+from Bio import SeqIO
+import numpy as np
+from collections import defaultdict
+
+lists = defaultdict(str)
+
+for record in SeqIO.parse("DNASequences.fasta", "fasta"):
+  lists[record.id] += record
 
 X = "GTCCATACA"
 Y = "TCATATCAG"
