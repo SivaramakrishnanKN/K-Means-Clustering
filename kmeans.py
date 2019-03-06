@@ -1,15 +1,20 @@
 import numpy as np
 from Bio import SeqIO
+from Bio import pairwise2 as pw
+from Bio.pairwise2 import format_alignment
 import numpy as np
+import random
 from collections import defaultdict
+import edlib
+import parasail
 
-lists = defaultdict(str)
+lists = []
 
 for record in SeqIO.parse("DNASequences.fasta", "fasta"):
-  lists[record.id] += record
+  lists.append(record)
 
-X = "GTCCATACA"
-Y = "TCATATCAG"
+X = "xy"
+Y = "abdf"
 
 # Parameters
 penalty = -1
@@ -22,34 +27,47 @@ def score(n1,n2):
     else:
         return penalty
 
-# Function to find the similarity
-def similarity_score(X,Y):
-    # Making the matrix
-    score_matrix = np.zeros(shape=(len(X)+1,len(Y)+1))
-    for i in range(len(X)+1):
-        score_matrix[i,0] = i*penalty
-    for j in range(len(Y)+1):
-        score_matrix[0,j] = j*penalty
+k = 4
 
-    # Filling up the rest of the values
-    for i in range(1,len(X)+1):
-        for j in range(1,len(Y)+1):
-            score_matrix[i,j] = max(score_matrix[i-1,j-1]+score(X[i-1],Y[j-1]),score_matrix[i-1,j]+penalty,score_matrix[i,j-1]+penalty)
+a = random.sample(range(0, len(lists)), k)
 
-    # Getting the similarity value
-    i = len(X)
-    j = len(Y)
-    value = 0
-    while i>0 or j>0:
-        if i>0 and j>0 and X[i-1]==Y[j-1]:
-            value = value + 1
-            i = i-1
-            j = j-1
-        elif i>0 and score_matrix[i,j]==score_matrix[i-1,j]+penalty:
-            i = i-1
-        else:
-            j = j-1
+clusters = np.full(shape = (len(lists)), fill_value = -1, dtype = int)
+for i in range(len(a)):
+  clusters[a[i]] = i
 
-    return value
 
-print(similarity_score(X,Y))
+t = pw.align.globalxx(X, Y)
+print(t[0][2])
+
+
+distances = np.zeros(shape=(len(lists),len(lists)))
+for i in range(len(lists)):
+  for j in range(i+1,len(lists)):
+    t = pw.align.globalxx(lists[i].seq, lists[j].seq)
+    #t = parasail.nw(str(lists[i].seq), str(lists[j].seq), 10, 1, parasail.blosum62)
+    distances[i,j] = t[0][2]
+    distances[j,i] = t[0][2]
+    print(j)
+  print(i)
+    
+f = open("temp.bin",'wb')
+np.save(f,distances)
+f.close()
+#
+#t = pw.align.globalxx(lists[1].seq, lists[127].seq)
+#print(t[0][2])
+
+#for i in range(len(lists)):
+#  mins = 9999999
+ # index = -1
+  
+  #for j in range(len(a)):
+   # t = pw.align.globalxx(lists[i].seq, lists[a[j]].seq)
+    #print(t[0][2])
+    #if t[0][2]<mins:
+     # mins = t[0][2]
+      #index = j
+  #print(index)
+  #print('\n')
+  #clusters[i] = index
+
